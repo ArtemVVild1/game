@@ -5,103 +5,116 @@ W, H = 1200, 840
 screen = pygame.display.set_mode((W, H))  # flags = pygame.NOFRAME - убрать рамку у окна
 clock = pygame.time.Clock()
 fps = 60
+action_lst = ['Idle', 'Attack', 'Dead', 'Run', 'Jump', 'Jupm_Throw', 'Jump_Attack', 'Slide', 'Throw', ]
+action = 0
 
 
-class Object(pygame.sprite.Sprite):
-    def __init__(self, x, y, filename):
+class Player(pygame.sprite.Sprite):
+    def __init__(self, ):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load(filename).convert_alpha()
-        self.rect = self.image.get_rect(center=(x, y))
-        self.dx = 0
-        self.dy = 0
-        self.jump = False  # 0
+        self.image = pygame.image.load(f'img/sprite/{action_lst[action]}__00{str(0)}.png')
+        self.frame = 0
+        self.rect = self.image.get_rect(center=(H/2, W/2))
         self.jump_count = 10
-        self.slide = False  # 0
-        self.walk = False  # 0
+        # self.slide = False  # 0
+        self.slide_count = 0
         self.right = False  # 0
         self.left = False  # 0
         self.frame = 0
 
     def update(self, *args) -> None:
-        key = pygame.key.get_pressed()
-        lst_png = ['000.png', '001.png', '002.png', '003.png', '004.png', '005.png',
-                   '006.png', '007.png', '008.png', '009.png', ]
+        if self.right:
+            self.image = pygame.image.load(
+                    f'img/sprite/{action_lst[action]}__00{str(int(self.frame))}.png').convert_alpha()
+            if args[2] == 3:
+                self.rect.x += 5
 
-        if key[pygame.K_d]:
-            self.rect.x += 3
-            self.right = True
-            self.image = pygame.image.load(f'hero/Movement/Run_right/Run__{lst_png[int(self.frame)]}')
+            if args[2] == 7 and self.slide_count:
+                self.slide_count -= 1
+                self.rect.x += 25/3
+                self.rect.y = H - self.rect.height+20
+        if self.left:
+            self.image = pygame.transform.flip(
+                pygame.image.load(f'img/sprite/{action_lst[action]}__00{str(int(self.frame))}.png'), 1,
+                0).convert_alpha()
+            if args[2] == 3:
+                self.rect.x -= 5
 
-        if key[pygame.K_a]:
-            self.rect.x -= 3
-            self.left = True
-            self.image = pygame.image.load(f'hero/Movement/Run_left/Run__{lst_png[int(self.frame)]}')
-        self.frame += 0.5
+        self.frame += 0.4
         self.frame %= 9
 
-        if key[pygame.K_s]:
-            self.slide = True
-            if self.right:
-                self.rect.x += 5
-                self.image = pygame.image.load(f'hero/Movement/Slide/Slide__{lst_png[int(self.frame)]}')
-            if self.left:
-                self.rect.x -= 5
-                self.image = pygame.image.load(f'hero/Movement/Slide/Slide_ls__{lst_png[int(self.frame)]}')
-            self.frame += 0.6
-            self.frame %= 9
 
-        if key[pygame.K_w]:
-            self.jump = True
+        """
+
+        if self.slide:
+            self.slide_count += 1
+            if self.slide_count > 20:
+                self.slide = False
+                self.slide_count = 0
+            if self.left:
+                self.rect.x -= 10
+                self.image = pygame.image.load(f'hero/Movement/Slide/Slide_ls__{lst_png[int(self.frame)]}')
+            if self.right:
+                self.rect.x += 10
+                self.image = pygame.image.load(f'hero/Movement/Slide/Slide__{lst_png[int(self.frame)]}')
+            self.frame += 0.6
+        self.frame %= 9
+
+        if self.jump:
             if self.right:
                 self.rect.x += 3
                 self.image = pygame.image.load(f'hero/Movement/Jump/Jump__{lst_png[int(self.frame)]}')
             if self.left:
                 self.rect.x -= 3
                 self.image = pygame.image.load(f'hero/Movement/Jump/Jump_ls__{lst_png[int(self.frame)]}')
-            self.frame += 0.2
+            self.frame += 0.1
             self.frame %= 9
-
             if self.jump_count >= -10:
                 if self.jump_count < 0:
-                    self.rect.y += (self.jump_count ** 2) // 2
+                    self.rect.y += (self.jump_count**2) // 2
                 else:
-                    self.rect.y -= (self.jump_count ** 2) // 2
+                    self.rect.y -= (self.jump_count**2) // 2
                 self.jump_count -= 1
-
             else:
                 self.jump = False
-                self.jump_count = 10
-
-        """else:
-            self.rect.y = H-self.rect.h
-            self.frame+=0.2
-            self.image = pygame.image.load(f'hero/Movement/Staing/Idle__{lst_png[int(self.frame)]}')"""
+                self.jump_count = 10"""
 
 
-"""if self.walk:
-
-elif self.slide:
-    self.dy = self.rect.y
-    self.image = pygame.image.load('hero/Movement/Slide/Slide__' + pers[int(self.frame)]).convert_alpha()
-"""
-
-hero = Object(30, 800, 'hero/Movement/Staing/Idle__000.png')
+hero = Player()
 pygame.display.set_caption('#')  # задать название для окна
-# background = pygame.image.load('background/Background.png')
-# bg_x = 0
-# bg_y = 0
 
 while True:
+    pressed = pygame.key.get_pressed()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
-        elif event.type == pygame.KEYUP:
-            hero.stay = True  # 1
-            hero.right = False
-            hero.left = False  # 0
+        if event.type == pygame.KEYUP:
+            action = 0
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_d:
+                hero.right = True
+                hero.left = False
+                action = 3
+            if event.key == pygame.K_a:
+                hero.left = True
+                hero.right = False
+                action = 3
+            if event.key == pygame.K_s:
+                hero.slide_count = 30
+                action = 7
+            """if event.key == pygame.K_w:
+                hero.jump = True
+                action = 4"""
 
-    screen.fill((255, 255, 255))
-    hero.update(W, H)
+
+            """hero.right = False
+            hero.left = False
+            hero.jump = False
+            hero.slide = False"""
+
+
+    screen.fill((0, 0, 0))
+    hero.update(H, W, action)
     screen.blit(hero.image, hero.rect)
     pygame.display.update()
     clock.tick(fps)
